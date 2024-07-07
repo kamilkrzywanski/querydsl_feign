@@ -17,8 +17,20 @@ import com.querydsl.core.NumberConstant;
 import com.querydsl.core.QuerydslModule;
 import com.querydsl.core.StringConstant;
 import com.querydsl.core.Target;
-import com.querydsl.core.types.*;
-import com.querydsl.core.types.dsl.*;
+import com.querydsl.core.types.CollectionExpression;
+import com.querydsl.core.types.Constant;
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.MapExpression;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.ArrayExpression;
+import com.querydsl.core.types.dsl.CollectionExpressionBase;
+import com.querydsl.core.types.dsl.ComparableExpression;
+import com.querydsl.core.types.dsl.ListExpression;
+import com.querydsl.core.types.dsl.ListPath;
+import com.querydsl.core.types.dsl.MapExpressionBase;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.SimpleExpression;
+import com.querydsl.core.types.dsl.StringExpression;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -86,7 +98,6 @@ public class R2DBCMatchingFiltersFactory {
     rv.add(expr.dayOfMonth().eq(other.dayOfMonth()));
 
     if (!target.equals(Target.DERBY)
-        && !module.equals(QuerydslModule.JDO)
         && !target.equals(Target.ORACLE)
         && !target.equals(Target.FIREBIRD)
         && (!target.equals(Target.POSTGRESQL) || !module.equals(QuerydslModule.JPA))) {
@@ -129,7 +140,6 @@ public class R2DBCMatchingFiltersFactory {
     rv.add(expr.dayOfMonth().eq(other.dayOfMonth()));
 
     if (!target.equals(Target.DERBY)
-        && !module.equals(QuerydslModule.JDO)
         && !target.equals(Target.ORACLE)
         && (!target.equals(Target.POSTGRESQL) || !module.equals(QuerydslModule.JPA))) {
       rv.add(expr.dayOfWeek().eq(other.dayOfWeek()));
@@ -207,12 +217,10 @@ public class R2DBCMatchingFiltersFactory {
 
   public Collection<Predicate> string(StringExpression expr, StringExpression other) {
     HashSet<Predicate> rv = new HashSet<Predicate>();
-    if (module != QuerydslModule.LUCENE) {
-      rv.addAll(comparable(expr, other));
+    rv.addAll(comparable(expr, other));
 
-      rv.add(expr.charAt(0).eq(other.charAt(0)));
-      rv.add(expr.charAt(1).eq(other.charAt(1)));
-    }
+    rv.add(expr.charAt(0).eq(other.charAt(0)));
+    rv.add(expr.charAt(1).eq(other.charAt(1)));
 
     rv.add(expr.contains(other));
     rv.add(expr.contains(other.substring(0, 1)));
@@ -241,57 +249,49 @@ public class R2DBCMatchingFiltersFactory {
     rv.add(expr.eq(other));
     rv.add(expr.equalsIgnoreCase(other));
 
-    if (module != QuerydslModule.LUCENE) {
-      rv.add(expr.indexOf(other).eq(0));
-      rv.add(expr.locate(other).eq(1));
-    }
+    rv.add(expr.indexOf(other).eq(0));
+    rv.add(expr.locate(other).eq(1));
 
-    if (target != Target.DERBY && module != QuerydslModule.LUCENE) {
+    if (target != Target.DERBY) {
       rv.add(expr.indexOf(other.substring(1)).eq(1));
       rv.add(expr.indexOf(other.substring(2)).eq(2));
     }
 
-    if (module != QuerydslModule.LUCENE) {
-      rv.add(expr.isEmpty().not());
-      rv.add(expr.isNotEmpty());
-    }
+    rv.add(expr.isEmpty().not());
+    rv.add(expr.isNotEmpty());
 
-    if (module != QuerydslModule.LUCENE) {
-      rv.add(expr.length().eq(other.length()));
-      rv.add(expr.like(other));
+    rv.add(expr.length().eq(other.length()));
+    rv.add(expr.like(other));
 
-      if (module != QuerydslModule.JDO || other instanceof Constant<?>) {
-        rv.add(expr.like(other.substring(0, 1).append("%")));
-        rv.add(expr.like(other.substring(0, 1).append("%").append(other.substring(2))));
-        rv.add(expr.like(other.substring(1).prepend("%")));
-        rv.add(expr.like(other.substring(1, 2).append("%").prepend("%")));
-      }
+    if (other instanceof Constant<?>) {
+      rv.add(expr.like(other.substring(0, 1).append("%")));
+      rv.add(expr.like(other.substring(0, 1).append("%").append(other.substring(2))));
+      rv.add(expr.like(other.substring(1).prepend("%")));
+      rv.add(expr.like(other.substring(1, 2).append("%").prepend("%")));
     }
 
     rv.add(expr.lower().eq(other.lower()));
 
-    if (module != QuerydslModule.LUCENE) {
-      if (!module.equals(QuerydslModule.SQL)
-          || (!target.equals(Target.HSQLDB)
-              && !target.equals(Target.FIREBIRD)
-              && !target.equals(Target.H2)
-              && !target.equals(Target.DB2)
-              && !target.equals(Target.DERBY)
-              && !target.equals(Target.SQLITE)
-              && !target.equals(Target.SQLSERVER))) {
+    if (!module.equals(QuerydslModule.SQL)
+        || (!target.equals(Target.HSQLDB)
+            && !target.equals(Target.FIREBIRD)
+            && !target.equals(Target.H2)
+            && !target.equals(Target.DB2)
+            && !target.equals(Target.DERBY)
+            && !target.equals(Target.SQLITE)
+            && !target.equals(Target.SQLSERVER))) {
 
-        rv.add(expr.matches(other));
+      rv.add(expr.matches(other));
 
-        if (module != QuerydslModule.JDO || other instanceof Constant<?>) {
-          rv.add(expr.matches(other.substring(0, 1).append(".*")));
-          rv.add(expr.matches(other.substring(0, 1).append(".").append(other.substring(2))));
-          rv.add(expr.matches(other.substring(1).prepend(".*")));
-          rv.add(expr.matches(other.substring(1, 2).prepend(".*").append(".*")));
-        }
+      if (other instanceof Constant<?>) {
+        rv.add(expr.matches(other.substring(0, 1).append(".*")));
+        rv.add(expr.matches(other.substring(0, 1).append(".").append(other.substring(2))));
+        rv.add(expr.matches(other.substring(1).prepend(".*")));
+        rv.add(expr.matches(other.substring(1, 2).prepend(".*").append(".*")));
       }
-
-      rv.add(expr.ne(other));
     }
+
+    rv.add(expr.ne(other));
 
     rv.add(expr.startsWith(other));
     rv.add(expr.startsWith(other.substring(0, 1)));
@@ -301,13 +301,11 @@ public class R2DBCMatchingFiltersFactory {
     rv.add(expr.startsWithIgnoreCase(other.substring(0, 1)));
     rv.add(expr.startsWithIgnoreCase(other.substring(0, 2)));
 
-    if (module != QuerydslModule.LUCENE) {
-      rv.add(expr.substring(0, 1).eq(other.substring(0, 1)));
-      rv.add(expr.substring(1, 2).eq(other.substring(1, 2)));
-      rv.add(expr.substring(1).eq(other.substring(1)));
+    rv.add(expr.substring(0, 1).eq(other.substring(0, 1)));
+    rv.add(expr.substring(1, 2).eq(other.substring(1, 2)));
+    rv.add(expr.substring(1).eq(other.substring(1)));
 
-      rv.add(expr.trim().eq(other.trim()));
-    }
+    rv.add(expr.trim().eq(other.trim()));
 
     rv.add(expr.upper().eq(other.upper()));
     return Collections.unmodifiableSet(rv);

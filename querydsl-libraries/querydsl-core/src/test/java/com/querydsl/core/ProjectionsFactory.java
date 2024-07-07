@@ -17,7 +17,18 @@ import com.querydsl.core.types.CollectionExpression;
 import com.querydsl.core.types.Constant;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.MapExpression;
-import com.querydsl.core.types.dsl.*;
+import com.querydsl.core.types.dsl.ArrayExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.CollectionExpressionBase;
+import com.querydsl.core.types.dsl.DateExpression;
+import com.querydsl.core.types.dsl.DateTimeExpression;
+import com.querydsl.core.types.dsl.ListExpression;
+import com.querydsl.core.types.dsl.ListPath;
+import com.querydsl.core.types.dsl.MapExpressionBase;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.SimpleExpression;
+import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.dsl.TimeExpression;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -143,9 +154,7 @@ public class ProjectionsFactory {
       rv.add(expr.countDistinct());
     }
 
-    if (!(other instanceof Constant<?>
-        || module == QuerydslModule.JDO
-        || module == QuerydslModule.RDFBEAN)) {
+    if (!(other instanceof Constant<?> || module == QuerydslModule.RDFBEAN)) {
       CaseBuilder cases = new CaseBuilder();
       rv.add(
           NumberConstant.create(1)
@@ -209,9 +218,7 @@ public class ProjectionsFactory {
     rv.add(expr.substring(1));
     rv.add(expr.substring(0, 1));
 
-    if (!(other instanceof Constant<?>
-        || module == QuerydslModule.JDO
-        || module == QuerydslModule.RDFBEAN)) {
+    if (!(other instanceof Constant<?> || module == QuerydslModule.RDFBEAN)) {
       CaseBuilder cases = new CaseBuilder();
       rv.add(cases.when(expr.eq("A")).then(other).when(expr.eq("B")).then(expr).otherwise(other));
 
@@ -222,9 +229,7 @@ public class ProjectionsFactory {
 
     rv.add(expr.upper());
 
-    if (module != QuerydslModule.JDO) {
-      rv.add(expr.nullif("xxx"));
-    }
+    rv.add(expr.nullif("xxx"));
 
     return Collections.unmodifiableSet(rv);
   }

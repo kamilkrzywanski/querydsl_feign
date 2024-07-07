@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.openfeign.querydsl</groupId>
   <artifactId>querydsl-root</artifactId>
-  <version>6.6-SNAPSHOT</version>
+  <version>7.0-SNAPSHOT</version>
 
   <packaging>pom</packaging>
   <name>Querydsl</name>
@@ -87,6 +87,9 @@
   </distributionManagement>
 
   <properties>
+    <!-- removing old modules on 7.0 release -->
+    <japicmp.skip>true</japicmp.skip>
+
     <failIfNoTests>false</failIfNoTests>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.homepage>http://www.querydsl.com</project.homepage>
